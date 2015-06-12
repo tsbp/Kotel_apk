@@ -3,6 +3,7 @@ package com.example.voodoo.kotel;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.Window;
 import android.view.MenuItem;
 
 
@@ -11,6 +12,7 @@ public class KotelMainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //activity_kotel_main.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_kotel_main);
     }
 
