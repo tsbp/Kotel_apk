@@ -6,6 +6,8 @@
         android:minSdkVersion="10"
         android:targetSdkVersion="10" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <android:uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="18" />
@@ -34,6 +36,10 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_settings"
             android:theme="@style/FullscreenTheme" >
+        </activity>
+        <activity
+            android:name=".LanConfigActivity"
+            android:label="@string/title_activity_lan_config" >
         </activity>
     </application>
 
