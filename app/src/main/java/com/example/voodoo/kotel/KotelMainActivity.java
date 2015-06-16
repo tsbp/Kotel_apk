@@ -14,6 +14,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.net.DatagramPacket;
@@ -25,6 +26,7 @@ import java.net.SocketTimeoutException;
 public class KotelMainActivity extends Activity {//implements View.OnClickListener{
 
     Button updBtn, setBtn;
+    ProgressBar pbWait;
     private TextView response;
     String configReference = "lanConfig";
 
@@ -36,6 +38,9 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
 
         Button updBtn = (Button) findViewById(R.id.updtbtn);
         Button setBtn = (Button) findViewById(R.id.setbtn);
+
+        final ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+
 
         final TextView response = (TextView) findViewById(R.id.response);
 
@@ -56,6 +61,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         updBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 loadConfig();
+                pbWait.setVisibility(View.VISIBLE);
                 response.setText("Sending...");
                 SendTask tsk = new SendTask();
                 tsk.execute();
@@ -199,8 +205,11 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
+            ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+            pbWait.setVisibility(View.INVISIBLE);
             i++;
             String st = "Sended: " + i + "\r\n" + ret;
+            ret = "no answer";
             TextView response = (TextView) findViewById(R.id.response);
             response.setText(st);
         }
