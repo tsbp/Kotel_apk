@@ -17,10 +17,13 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.voodoo.plot;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.StringTokenizer;
 
 
 public class KotelMainActivity extends Activity {//implements View.OnClickListener{
@@ -29,6 +32,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     ProgressBar pbWait;
     private TextView response;
     String configReference = "lanConfig";
+    public String plotValue = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +137,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     //==============================================================================================
 
 
-    public final static String BROADCAST_ACTION = "com.example.voodoo.kotel";
+    public  String BROADCAST_ACTION = "1";
     String ret = "";
     int i = 0;
 
@@ -200,18 +204,97 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             return null;
         }
 
-        ///int i = 0;
+
 
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
-            pbWait.setVisibility(View.INVISIBLE);
             i++;
             String st = "Sended: " + i + "\r\n" + ret;
-            ret = "no answer";
+
             TextView response = (TextView) findViewById(R.id.response);
             response.setText(st);
+
+
+
+            int u = ret.indexOf("data:") + 5;
+            String resp = ret.substring(u, ret.length());
+            String s;
+            if(( (resp.indexOf("S")) != -1) && ( (resp.indexOf("\n")) != -1))
+            {
+                s = ret.substring(u+1, u + 2);
+                int msgNumb = Integer.parseInt(s);
+                s = ret.substring(u + 2, u + 3);
+                int partsCount = Integer.parseInt(s);
+                s = ret.substring(u + 3, u + 4);
+                int valsCount = Integer.parseInt(s);
+
+                if(msgNumb == partsCount)
+                {
+                    s = resp.substring(4, resp.indexOf("\n"));
+                    plotValue += s;
+                    try
+                    {
+                        for(int j = 0; j < 24; j++)
+                            plot.aBuf[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
+
+                        com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
+                        inCanvas.invalidate();
+
+                        ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+                        pbWait.setVisibility(View.INVISIBLE);
+                    }
+                    catch (Exception e)
+                    {
+                    }
+
+                    plotValue = "";
+                    BROADCAST_ACTION = "1";
+                }
+                else
+                {
+                    s = resp.substring(4, resp.indexOf("\n"));
+                    BROADCAST_ACTION = String.valueOf(msgNumb+1);
+                    plotValue += s;
+                    SendTask tsk = new SendTask();
+                    tsk.execute();
+                }
+
+            }
+            else
+            {
+                SendTask tsk = new SendTask();
+                tsk.execute();
+            }
+
+
+//            int u = ret.indexOf("data:");
+//            TextView inTemp = (TextView) findViewById(R.id.inTemp);
+//            inTemp.setText(ret.substring(u+5,u+8));
+//            TextView outTemp = (TextView) findViewById(R.id.outTemp);
+//            outTemp.setText(ret.substring(u+8,u+11));
+//
+//
+//            String s = ret.substring(u+5,u+8);
+//            int d = u+11;
+//
+//            try
+//            {
+//                for(int j = 0; j < 24; j++)
+//                    plot.aBuf[j] = Integer.parseInt( ret.substring(d+j*3, d+j*3+3));
+//
+//                com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
+//                inCanvas.invalidate();
+//            }
+//            catch (Exception e)
+//            {
+//            }
+
+
+
+
+
+            ret = "no answer";
         }
 
         @Override

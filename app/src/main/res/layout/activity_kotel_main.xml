@@ -57,7 +57,9 @@
         android:layout_height="100dp"
         android:id="@+id/response"
         android:gravity="center"
-        android:layout_centerVertical="true"/>
+        android:layout_above="@+id/setbtn"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="false" />
 
     <ProgressBar
         android:layout_width="wrap_content"
@@ -66,5 +68,15 @@
         android:layout_alignTop="@+id/updtbtn"
         android:layout_centerHorizontal="true"
         android:visibility="invisible" />
+
+    <com.example.voodoo.plot
+        android:id="@+id/inCanvas"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:indeterminate="false"
+        android:layout_below="@+id/inTemp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>
