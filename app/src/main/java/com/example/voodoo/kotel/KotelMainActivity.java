@@ -18,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.voodoo.plot;
+import com.example.voodoo.plot2;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -137,7 +138,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     //==============================================================================================
 
 
-    public  String BROADCAST_ACTION = "1";
+    public  String BROADCAST_ACTION = "I1";
     String ret = "";
     int i = 0;
 
@@ -204,7 +205,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             return null;
         }
 
-
+        byte plotRef = 'I';
 
         @Override
         protected void onPostExecute(Void result) {
@@ -215,13 +216,15 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             TextView response = (TextView) findViewById(R.id.response);
             response.setText(st);
 
-
-
             int u = ret.indexOf("data:") + 5;
             String resp = ret.substring(u, ret.length());
             String s;
-            if(( (resp.indexOf("S")) != -1) && ( (resp.indexOf("\n")) != -1))
+            if(((resp.indexOf("I") != -1) || (resp.indexOf("O") != -1)) && ( (resp.indexOf("\n")) != -1))
             {
+
+                if((resp.indexOf("I") != -1))  plotRef = 'I';
+                if((resp.indexOf("O") != -1))  plotRef = 'O';
+
                 s = ret.substring(u+1, u + 2);
                 int msgNumb = Integer.parseInt(s);
                 s = ret.substring(u + 2, u + 3);
@@ -235,26 +238,59 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                     plotValue += s;
                     try
                     {
-                        for(int j = 0; j < 24; j++)
-                            plot.aBuf[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
+                        if(plotRef == 'I')
+                        {
+                            for(int j = 0; j < 24; j++)
+                                plot.aBuf[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
 
-                        com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
-                        inCanvas.invalidate();
+                            com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
+                            inCanvas.invalidate();
+                        }
+                        if(plotRef == 'O')
+                        {
+                            for(int j = 0; j < 24; j++)
+                                plot2.aBuf2[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
+//
+//                            TextView outTemp = (TextView) findViewById(R.id.outTemp);
+//                            outTemp.setText(plotValue.substring(plotValue.length()-3));
 
-                        ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
-                        pbWait.setVisibility(View.INVISIBLE);
+                            com.example.voodoo.plot2 inCanvas = (com.example.voodoo.plot2) findViewById(R.id.outCanvas);
+                            inCanvas.invalidate();
+                        }
                     }
                     catch (Exception e)
                     {
                     }
 
+                    if(BROADCAST_ACTION.indexOf("I3") != -1)
+                    {
+
+                        TextView inTemp = (TextView) findViewById(R.id.inTemp);
+                        inTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
+                        BROADCAST_ACTION = "O1";
+                        SendTask tsk = new SendTask();
+                        tsk.execute();
+                    }
+                    if(BROADCAST_ACTION.indexOf("O3") != -1)
+                    {
+                        TextView outTemp = (TextView) findViewById(R.id.outTemp);
+                        outTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
+                        BROADCAST_ACTION = "I1";
+
+                        ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+                        pbWait.setVisibility(View.INVISIBLE);
+                    }
+
                     plotValue = "";
-                    BROADCAST_ACTION = "1";
+
                 }
                 else
                 {
                     s = resp.substring(4, resp.indexOf("\n"));
-                    BROADCAST_ACTION = String.valueOf(msgNumb+1);
+
+                    if((resp.indexOf("I") != -1))  BROADCAST_ACTION = 'I' + String.valueOf(msgNumb+1);
+                    if((resp.indexOf("O") != -1))  BROADCAST_ACTION = 'O' + String.valueOf(msgNumb+1);
+
                     plotValue += s;
                     SendTask tsk = new SendTask();
                     tsk.execute();
@@ -266,33 +302,6 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                 SendTask tsk = new SendTask();
                 tsk.execute();
             }
-
-
-//            int u = ret.indexOf("data:");
-//            TextView inTemp = (TextView) findViewById(R.id.inTemp);
-//            inTemp.setText(ret.substring(u+5,u+8));
-//            TextView outTemp = (TextView) findViewById(R.id.outTemp);
-//            outTemp.setText(ret.substring(u+8,u+11));
-//
-//
-//            String s = ret.substring(u+5,u+8);
-//            int d = u+11;
-//
-//            try
-//            {
-//                for(int j = 0; j < 24; j++)
-//                    plot.aBuf[j] = Integer.parseInt( ret.substring(d+j*3, d+j*3+3));
-//
-//                com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
-//                inCanvas.invalidate();
-//            }
-//            catch (Exception e)
-//            {
-//            }
-
-
-
-
 
             ret = "no answer";
         }
