@@ -48,22 +48,11 @@ public class LanConfigActivity extends Activity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(configReference, ip.getText().toString() + "port" + port.getText().toString());
         editor.commit();
-
-//        sPref = getPreferences(MODE_PRIVATE);
-//        SharedPreferences.Editor ed = sPref.edit();
-//        //ed.putString("ip: " + config, ip.getText().toString() + "\r\n port: " + port.getText().toString());
-//        ed.putString(configReference, ip.getText().toString() + "port" + port.getText().toString());
-//        ed.commit();
     }
 
     void loadConfig() {
-//        sPref = getPreferences(MODE_PRIVATE);
-//        String savedText = sPref.getString(configReference, "");
-
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String  savedText = sharedPreferences.getString(configReference, "") ;
-
-
         String _ip, _port;
         int i = savedText.indexOf("port");
         if(i != -1)
@@ -74,6 +63,5 @@ public class LanConfigActivity extends Activity {
         else return;
         ip.setText(_ip);
         port.setText(_port);
-        //Toast.makeText(this, "Text loaded", Toast.LENGTH_SHORT).show();
     }
 }

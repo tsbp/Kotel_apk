@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.format.DateFormat;
+import android.text.format.Time;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +26,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.StringTokenizer;
 
 
@@ -34,6 +39,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     private TextView response;
     String configReference = "lanConfig";
     public String plotValue = "";
+    String timeString = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,13 +150,20 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
 
     class SendTask extends AsyncTask<Void, Void, Void>
     {
-
+        //==========================================================================================
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
 
+            if(BROADCAST_ACTION.indexOf("I1") != -1)
+            {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Calendar cal = Calendar.getInstance();
+                timeString = dateFormat.format(cal.getTime());
+                BROADCAST_ACTION += timeString;
+            }
         }
-
+        //==========================================================================================
         @Override
         protected Void doInBackground(Void... params) {
 
@@ -161,7 +174,6 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             {
 
                 byte[] ipAddr = new byte[]{ (byte)(ip[0] & 0xff), (byte) ip[1], (byte) ip[2], (byte) ip[3]};
-                //byte[] ipAddr = new byte[]{ (byte)192, (byte) 168, 43, (byte) 246};
                 InetAddress addr = InetAddress.getByAddress(ipAddr);
                 ds = new DatagramSocket(port);
                 DatagramPacket dp;
@@ -250,9 +262,6 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                         {
                             for(int j = 0; j < 24; j++)
                                 plot2.aBuf2[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
-//
-//                            TextView outTemp = (TextView) findViewById(R.id.outTemp);
-//                            outTemp.setText(plotValue.substring(plotValue.length()-3));
 
                             com.example.voodoo.plot2 inCanvas = (com.example.voodoo.plot2) findViewById(R.id.outCanvas);
                             inCanvas.invalidate();
@@ -264,7 +273,6 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
 
                     if(BROADCAST_ACTION.indexOf("I3") != -1)
                     {
-
                         TextView inTemp = (TextView) findViewById(R.id.inTemp);
                         inTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
                         BROADCAST_ACTION = "O1";
@@ -295,14 +303,12 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                     SendTask tsk = new SendTask();
                     tsk.execute();
                 }
-
             }
             else
             {
                 SendTask tsk = new SendTask();
                 tsk.execute();
             }
-
             ret = "no answer";
         }
 
