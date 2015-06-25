@@ -40,6 +40,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     String configReference = "lanConfig";
     public String plotValue = "";
     String timeString = "";
+    public  String BROADCAST_ACTION = "I1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,12 +143,8 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         return super.onOptionsItemSelected(item);
     }
     //==============================================================================================
-
-
-    public  String BROADCAST_ACTION = "I1";
     String ret = "";
     int i = 0;
-
     class SendTask extends AsyncTask<Void, Void, Void>
     {
         //==========================================================================================
@@ -155,7 +152,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         protected void onPreExecute() {
             super.onPreExecute();
 
-            if(BROADCAST_ACTION.indexOf("I1") != -1)
+            if(BROADCAST_ACTION.contains("I1"))
             {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 Calendar cal = Calendar.getInstance();
@@ -231,11 +228,11 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             int u = ret.indexOf("data:") + 5;
             String resp = ret.substring(u, ret.length());
             String s;
-            if(((resp.indexOf("I") != -1) || (resp.indexOf("O") != -1)) && ( (resp.indexOf("\n")) != -1))
+            if(((resp.contains("I")) || (resp.contains("O"))) && ( (resp.indexOf("\n")) != -1))
             {
 
-                if((resp.indexOf("I") != -1))  plotRef = 'I';
-                if((resp.indexOf("O") != -1))  plotRef = 'O';
+                if(resp.contains("I"))  plotRef = 'I';
+                if(resp.contains("O"))  plotRef = 'O';
 
                 s = ret.substring(u+1, u + 2);
                 int msgNumb = Integer.parseInt(s);
@@ -271,7 +268,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                     {
                     }
 
-                    if(BROADCAST_ACTION.indexOf("I3") != -1)
+                    if(BROADCAST_ACTION.contains("I3"))
                     {
                         TextView inTemp = (TextView) findViewById(R.id.inTemp);
                         inTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
@@ -279,7 +276,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                         SendTask tsk = new SendTask();
                         tsk.execute();
                     }
-                    if(BROADCAST_ACTION.indexOf("O3") != -1)
+                    if(BROADCAST_ACTION.contains("O3"))
                     {
                         TextView outTemp = (TextView) findViewById(R.id.outTemp);
                         outTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
@@ -296,8 +293,8 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                 {
                     s = resp.substring(4, resp.indexOf("\n"));
 
-                    if((resp.indexOf("I") != -1))  BROADCAST_ACTION = 'I' + String.valueOf(msgNumb+1);
-                    if((resp.indexOf("O") != -1))  BROADCAST_ACTION = 'O' + String.valueOf(msgNumb+1);
+                    if(resp.contains("I"))  BROADCAST_ACTION = 'I' + String.valueOf(msgNumb+1);
+                    if(resp.contains("O"))  BROADCAST_ACTION = 'O' + String.valueOf(msgNumb+1);
 
                     plotValue += s;
                     SendTask tsk = new SendTask();

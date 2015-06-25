@@ -1,160 +1,216 @@
 package com.example.voodoo.kotel;
 
 import com.example.voodoo.kotel.util.SystemUiHider;
+import com.example.voodoo.plot;
+import com.example.voodoo.plot2;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.view.View.OnClickListener;
+import android.widget.GridView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- *
- * @see SystemUiHider
- */
 public class settingsActivity extends Activity {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
 
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+    Button bSave, bLoad, bAdd, bDel;
+    String configReference = "lanConfig";
+    String[] time = {"12.30", "18.30", "22.30", "00.30"};
+    String[] temp = {"22", "24", "26.7", "13.9"};
 
-    /**
-     * If set, will toggle the system UI visibility upon interaction. Otherwise,
-     * will show the system UI visibility upon interaction.
-     */
-    private static final boolean TOGGLE_ON_CLICK = true;
+    GridView gvMain;
+    ArrayAdapter<String> adapter;
 
-    /**
-     * The flags to pass to {@link SystemUiHider#getInstance}.
-     */
-    private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
-
-    /**
-     * The instance of the {@link SystemUiHider} for this activity.
-     */
-    private SystemUiHider mSystemUiHider;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_settings);
 
-        final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View contentView = findViewById(R.id.fullscreen_content);
+        adapter = new ArrayAdapter<String>(this, R.layout.item, R.id.tvText, time);
+        gvMain = (GridView) findViewById(R.id.gvTime);
+        gvMain.setAdapter(adapter);
 
-        // Set up an instance of SystemUiHider to control the system UI for
-        // this activity.
-        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
-        mSystemUiHider.setup();
-        mSystemUiHider
-                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
-                    int mControlsHeight;
-                    int mShortAnimTime;
+        adapter = new ArrayAdapter<String>(this, R.layout.item, R.id.tvText, temp);
+        gvMain = (GridView) findViewById(R.id.gvTemprature);
+        gvMain.setAdapter(adapter);
 
-                    @Override
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-                    public void onVisibilityChange(boolean visible) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                            // If the ViewPropertyAnimator API is available
-                            // (Honeycomb MR2 and later), use it to animate the
-                            // in-layout UI controls at the bottom of the
-                            // screen.
-                            if (mControlsHeight == 0) {
-                                mControlsHeight = controlsView.getHeight();
-                            }
-                            if (mShortAnimTime == 0) {
-                                mShortAnimTime = getResources().getInteger(
-                                        android.R.integer.config_shortAnimTime);
-                            }
-                            controlsView.animate()
-                                    .translationY(visible ? 0 : mControlsHeight)
-                                    .setDuration(mShortAnimTime);
-                        } else {
-                            // If the ViewPropertyAnimator APIs aren't
-                            // available, simply show or hide the in-layout UI
-                            // controls.
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        }
 
-                        if (visible && AUTO_HIDE) {
-                            // Schedule a hide().
-                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                        }
-                    }
-                });
+        Button bSave = (Button) findViewById(R.id.btnSave);
+        Button bLoad = (Button) findViewById(R.id.btnLoad);
+        Button bAdd = (Button) findViewById(R.id.btnAdd);
+        Button bDel = (Button) findViewById(R.id.btnDel);
 
-        // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (TOGGLE_ON_CLICK) {
-                    mSystemUiHider.toggle();
-                } else {
-                    mSystemUiHider.show();
-                }
+        final TextView response = (TextView) findViewById(R.id.confResponse);
+
+        //================================================
+        bSave.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+
             }
         });
+        //================================================
+        bLoad.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                loadConfig();
+                //pbWait.setVisibility(View.VISIBLE);
 
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
-    }
+                response.setText("Sending...");
+                SendTask tsk = new SendTask();
+                tsk.execute();
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-        delayedHide(100);
-    }
-
-
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
             }
-            return false;
-        }
-    };
+        });
+        //================================================
+        bAdd.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
 
-    Handler mHideHandler = new Handler();
-    Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mSystemUiHider.hide();
-        }
-    };
+            }
+        });
+        //================================================
+        bDel.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
 
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
+            }
+        });
     }
+    //==============================================================================================
+    SharedPreferences sPref;
+    public String config;
+    int[] ip = new int[4];
+    int port;
+    //==============================================================================================
+    void loadConfig() {
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String  cString = sharedPreferences.getString(configReference, "") ;
+
+//        sPref = getPreferences(MODE_PRIVATE);
+//        String cString = sPref.getString(configReference, "");
+        String _ip, _port;
+
+        int i = cString.indexOf("port");
+        if(i != -1)
+        {
+            _ip   = cString.substring(0,i);
+            _port = cString.substring(i+4,cString.length());
+        }
+        else return;
+
+        String tmp;
+        for(int k = 0; k < 4; k++)
+        {
+            i = _ip.indexOf(".");
+            if(i != -1)  tmp = _ip.substring(0,i);
+            else tmp = _ip;
+            ip[k] = Integer.parseInt(tmp);
+            if(k < 3) _ip = _ip.substring(i+1, _ip.length());
+        }
+        port = Integer.parseInt(_port);
+
+    }
+    //==============================================================================================
+    String REQUEST_ACTION = "CONF1";
+    String ret = "";
+    int i = 0;
+
+    class SendTask extends AsyncTask<Void, Void, Void>
+    {
+        //==========================================================================================
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+        //==========================================================================================
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            DatagramSocket ds = null;
+            try
+            {
+
+                byte[] ipAddr = new byte[]{ (byte)(ip[0] & 0xff), (byte) ip[1], (byte) ip[2], (byte) ip[3]};
+                InetAddress addr = InetAddress.getByAddress(ipAddr);
+                ds = new DatagramSocket(port);
+                DatagramPacket dp;
+                dp = new DatagramPacket(REQUEST_ACTION.getBytes(), REQUEST_ACTION.getBytes().length, addr, port);
+                ds.setBroadcast(true);
+                ds.send(dp);
+                //===================
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket =
+                        new DatagramPacket(receiveData, receiveData.length);
+
+                //response.setText("Waiting for answer...");
+                ds.setSoTimeout(10000);
+
+                try {
+                    ds.receive(receivePacket);
+                    String modifiedSentence =
+                            new String(receivePacket.getData());
+                    InetAddress returnIPAddress = receivePacket.getAddress();
+                    int port = receivePacket.getPort();
+                    ret = "ip:" + returnIPAddress + "\r\nport:" + port + "\r\ndata:" + modifiedSentence;
+                }
+                catch (SocketTimeoutException ste)
+                {
+                    System.out.println("Timeout Occurred: Packet assumed lost");
+                }
+                //===================
+                ds.close();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                if (ds != null)
+                {
+                    ds.close();
+                }
+            }
+            return null;
+        }
+
+
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            i++;
+            String st = "Sended: " + i + "\r\n" + ret;
+
+            TextView response = (TextView) findViewById(R.id.confResponse);
+            response.setText(st);
+
+            ret = "no answer";
+        }
+
+
+    }
+
 }
