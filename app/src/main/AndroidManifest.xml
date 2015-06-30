@@ -33,13 +33,20 @@
         </activity>
         <activity
             android:name=".settingsActivity"
+            android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme" >
         </activity>
         <activity
             android:name=".LanConfigActivity"
-            android:label="@string/title_activity_lan_config" >
+            android:label="@string/title_activity_lan_config"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".PeroidConfig"
+            android:label="@string/title_activity_peroid_config"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 

@@ -2,10 +2,13 @@
     <string name="app_name">Kotel</string>
     <string name="action_settings"> Set IP address</string>
     <string name="setPort"> Set port</string>
+    <string name="setTime"> Начало периода</string>
+    <string name="setTemp"> Температура</string>
     <string name="title_activity_settings">Конфигурация</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_lan_config">LanConfigActivity</string>
 
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_peroid_config">PeroidConfig</string>
 </resources>
