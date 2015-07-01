@@ -33,6 +33,25 @@
         android:layout_height="300dp">
     </ListView>
 
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/btnDel"
+        android:background="@drawable/bdel"
+        android:layout_below="@+id/lvMain"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="25dp" />
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/btnAdd"
+        android:background="@drawable/badd"
+        android:layout_below="@+id/lvMain"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="25dp" />
 
 
     <TextView

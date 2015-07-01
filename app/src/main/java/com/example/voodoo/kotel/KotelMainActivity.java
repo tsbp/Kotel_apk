@@ -40,7 +40,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     String configReference = "lanConfig";
     public String plotValue = "";
     String timeString = "";
-    public  String BROADCAST_ACTION = "I1";
+    String BROADCAST_ACTION = "I1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

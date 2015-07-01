@@ -42,6 +42,11 @@ public class settingsActivity extends Activity {
     List<String> aStrings = new ArrayList<String>();
     List<String> bStrings = new ArrayList<String>();
 
+    final int MODE_RECEIVE_CONFIG = 0;
+    final int MODE_SEND_CONFIG    = 1;
+    int mode = MODE_RECEIVE_CONFIG;
+    int currentPeroid;
+
     int selectedRow;
 
 
@@ -55,11 +60,23 @@ public class settingsActivity extends Activity {
 
         Button bSave = (Button) findViewById(R.id.btnSave);
         Button bLoad = (Button) findViewById(R.id.btnLoad);
-
-
+        Button bAdd  = (Button) findViewById(R.id.btnAdd);
+        Button bDel  = (Button) findViewById(R.id.btnDel);
         //================================================
         bSave.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
+
+                if(time != null)
+                {
+                    mode = MODE_SEND_CONFIG;
+                    currentPeroid = 1;
+                    formBuffer(currentPeroid);
+//                    ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
+//                    pb.setVisibility(View.VISIBLE);
+                    response.setText("Sending...");
+                    SendTask tsk = new SendTask();
+                    tsk.execute();
+                }
 
             }
         });
@@ -67,6 +84,8 @@ public class settingsActivity extends Activity {
         bLoad.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
 
+                mode = MODE_RECEIVE_CONFIG;
+                REQUEST_ACTION = "CONF1";
                 ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                 pb.setVisibility(View.VISIBLE);
                 loadConfig();
@@ -76,18 +95,53 @@ public class settingsActivity extends Activity {
 
             }
         });
-//        //================================================
-//        bAdd.setOnClickListener(new OnClickListener() {
-//            public void onClick(View v) {
-//
-//            }
-//        });
-//        //================================================
-//        bDel.setOnClickListener(new OnClickListener() {
-//            public void onClick(View v) {
-//
-//            }
-//        });
+        //================================================
+        bAdd.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                //if(time != null)
+                {
+                    List<String> tmpTime = new ArrayList<String>();
+                    List<String> tmpTemp = new ArrayList<String>();
+                    if(time != null)
+                        for(int k = 0; k < time.length; k++)
+                        {
+                            tmpTime.add(time[k]);
+                            tmpTemp.add(temp[k]);
+                        }
+                    tmpTime.add("12:50");
+                    tmpTemp.add("33.3");
+
+                    time = new String[tmpTime.size()];
+                    temp = new String[tmpTime.size()];
+
+                    tmpTime.toArray(time);
+                    tmpTemp.toArray(temp);
+                    updateConfigTable();
+                }
+            }
+        });
+        //================================================
+        bDel.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                if(time != null)
+                {
+                    List<String> tmpTime = new ArrayList<String>();
+                    List<String> tmpTemp = new ArrayList<String>();
+                    for(int k = 0; k < (time.length - 1); k++)
+                    {
+                        tmpTime.add(time[k]);
+                        tmpTemp.add(temp[k]);
+                    }
+                    time = new String[tmpTime.size()];
+                    temp = new String[tmpTime.size()];
+
+                    tmpTime.toArray(time);
+                    tmpTemp.toArray(temp);
+                    updateConfigTable();
+                }
+
+            }
+        });
     }
     //==============================================================================================
     @Override
@@ -102,10 +156,19 @@ public class settingsActivity extends Activity {
         updateConfigTable();
     }
     //==============================================================================================
+    void formBuffer(int aPeriod)
+    {
+        REQUEST_ACTION = "";
+        REQUEST_ACTION = "CSAV" +
+                currentPeroid +
+                time.length +
+                time[currentPeroid-1].substring(0,2) + time[currentPeroid-1].substring(3,5)+
+                temp[currentPeroid-1].substring(0,2) + temp[currentPeroid-1].substring(3,4);
+    }
+    //==============================================================================================
     // имена атрибутов для Map
     final String ATTRIBUTE_NAME_TIME = "time";
     final String ATTRIBUTE_NAME_TEMP = "temper";
-    //final String ATTRIBUTE_NAME_IMAGE = "image";
     //==============================================================================================
     void updateConfigTable()
     {
@@ -145,11 +208,8 @@ public class settingsActivity extends Activity {
                 intent.putExtra("pTemp", temp[position]);
                 //startActivity(intent);
                 startActivityForResult(intent, 1);
-
             }
         });
-
-
     }
     //==============================================================================================
     SharedPreferences sPref;
@@ -251,66 +311,98 @@ public class settingsActivity extends Activity {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
+
+            //if(ret.length() < 3) return;
             i++;
             String st = "Sended: " + i + "\r\n" + ret;
 
             TextView response = (TextView) findViewById(R.id.confResponse);
             response.setText(st);
 
-            int dataIndex = ret.indexOf("data:") + 5;
-            String resp = ret.substring(dataIndex, ret.length());
-            String s;
+//            int dataIndex =
+//            String resp = ;
 
-            if((resp.indexOf("\n\r") == 10) && (resp.indexOf("C") == 0) )
+            switch(mode)
             {
-                resp = resp.substring(0, 10);
-                s = resp.substring(1, 2);
-                int msgNumb = Integer.parseInt(s);
-                s = resp.substring(2, 3);
-                int partsCount = Integer.parseInt(s);
+                case MODE_RECEIVE_CONFIG:
+                    receiveCinfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                    break;
 
-                if(msgNumb == partsCount)
+                case MODE_SEND_CONFIG:
+                    sendConfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                    break;
+            }
+
+            ret = "no answer";
+        }
+    }
+    //==============================================================================================
+    void sendConfig(int dataIndex, String resp)
+    {
+        if(resp.contains("OK"))
+        {
+            if(currentPeroid <= time.length)
+            {
+                formBuffer(currentPeroid);
+                SendTask tsk = new SendTask();
+                tsk.execute();
+                currentPeroid++;
+            }
+
+        }
+    }
+    //==============================================================================================
+    void receiveCinfig(int dataIndex, String resp)
+    {
+
+        String s;
+
+        if((resp.indexOf("\n\r") == 10) && (resp.indexOf("C") == 0) )
+        {
+            resp = resp.substring(0, 10);
+            s = resp.substring(1, 2);
+            int msgNumb = Integer.parseInt(s);
+            s = resp.substring(2, 3);
+            int partsCount = Integer.parseInt(s);
+
+            if(msgNumb == partsCount)
+            {
+                aStrings.add(resp.substring(3));
+                bStrings.add(resp.substring(3));
+                time = new String[aStrings.size()];
+                temp = new String[bStrings.size()];
+                time = aStrings.toArray(time);
+                temp = bStrings.toArray(temp);
+
+                for(int j = 0; j < time.length; j++)
+                    time[j] = time[j].substring(0,2) + ":" + time[j].substring(2,4);
+                for(int j = 0; j < temp.length; j++)
                 {
-                    aStrings.add(resp.substring(3));
-                    bStrings.add(resp.substring(3));
-                    time = new String[aStrings.size()];
-                    temp = new String[bStrings.size()];
-                    time = aStrings.toArray(time);
-                    temp = bStrings.toArray(temp);
-
-                    for(int j = 0; j < time.length; j++)
-                        time[j] = time[j].substring(0,2) + ":" + time[j].substring(2,4);
-                    for(int j = 0; j < temp.length; j++)
-                    {
-                        String a1 = temp[j].substring(4, 6);
-                        String a2 = temp[j].substring(6);
-                        temp[j] = a1 + "," + a2;
-                    }
-
-                    updateConfigTable();
-                    ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
-                    pb.setVisibility(View.INVISIBLE);
-                    aStrings.clear();
-                    bStrings.clear();
-                    REQUEST_ACTION = "CONF1";
+                    String a1 = temp[j].substring(4, 6);
+                    String a2 = temp[j].substring(6);
+                    temp[j] = a1 + "." + a2;
                 }
-                else
-                {
-                    aStrings.add(resp.substring(3));
-                    bStrings.add(resp.substring(3));
-                    REQUEST_ACTION = "CONF" + String.valueOf(msgNumb+1);
-                    SendTask tsk = new SendTask();
-                    tsk.execute();
-                }
+
+                updateConfigTable();
+                ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
+                pb.setVisibility(View.INVISIBLE);
+                aStrings.clear();
+                bStrings.clear();
             }
             else
             {
+                aStrings.add(resp.substring(3));
+                bStrings.add(resp.substring(3));
+                REQUEST_ACTION = "CONF" + String.valueOf(msgNumb+1);
                 SendTask tsk = new SendTask();
                 tsk.execute();
             }
-            ret = "no answer";
         }
-
+        else
+        {
+            SendTask tsk = new SendTask();
+            tsk.execute();
+        }
 
     }
 
