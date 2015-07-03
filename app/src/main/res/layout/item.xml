@@ -2,23 +2,38 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
+    android:layout_height="50dp"
     android:background="#99cc7700"
     android:orientation="horizontal">
+    <TextView
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_gravity="center_vertical"
+        android:id="@+id/tvRef"
+        android:textSize="20dp"
+        android:text="1"
+        android:textColor="#0000ff"
+        android:background="#99cc7700"
+        android:gravity="center"/>
+
     <ImageView
         android:id="@+id/ivTime"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="30dp"
+        android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_marginLeft="10dp"
         android:src="@drawable/timeicon">
     </ImageView>
 
     <TextView
-        android:layout_width="95dp"
-        android:layout_height="60dp"
+        android:layout_width="70dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
         android:layout_gravity="center_vertical"
-        android:textSize="30dp"
+        android:textSize="20dp"
         android:text="22:30"
         android:textColor="#ff0000ff"
         android:gravity="left|center_vertical"
@@ -26,16 +41,17 @@
 
     <ImageView
         android:id="@+id/ivTemp"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:src="@drawable/tempicon" />
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
         android:layout_gravity="center_vertical"
-        android:textSize="30dp"
+        android:textSize="20dp"
         android:textColor="#ff0000ff"
         android:text="22,3"
         android:gravity="left|center_vertical"

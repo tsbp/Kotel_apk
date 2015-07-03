@@ -98,7 +98,7 @@ public class settingsActivity extends Activity {
         //================================================
         bAdd.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                //if(time != null)
+                if(time.length < 9)
                 {
                     List<String> tmpTime = new ArrayList<String>();
                     List<String> tmpTemp = new ArrayList<String>();
@@ -167,6 +167,7 @@ public class settingsActivity extends Activity {
     }
     //==============================================================================================
     // имена атрибутов для Map
+    final String ATTRIBUTE_NAME_REF = "ref";
     final String ATTRIBUTE_NAME_TIME = "time";
     final String ATTRIBUTE_NAME_TEMP = "temper";
     //==============================================================================================
@@ -180,6 +181,7 @@ public class settingsActivity extends Activity {
         Map<String, Object> m;
         for (int i = 0; i < time.length; i++) {
             m = new HashMap<String, Object>();
+            m.put(ATTRIBUTE_NAME_REF, i+1);
             m.put(ATTRIBUTE_NAME_TIME, time[i]);
             m.put(ATTRIBUTE_NAME_TEMP, temp[i]);
             //m.put(ATTRIBUTE_NAME_IMAGE, img);
@@ -187,9 +189,9 @@ public class settingsActivity extends Activity {
         }
 
         // массив имен атрибутов, из которых будут читаться данные
-        String[] from = { ATTRIBUTE_NAME_TIME, ATTRIBUTE_NAME_TEMP};
+        String[] from = {ATTRIBUTE_NAME_REF, ATTRIBUTE_NAME_TIME, ATTRIBUTE_NAME_TEMP};
         // массив ID View-компонентов, в которые будут вставлять данные
-        int[] to = { R.id.tvTime, R.id.tvTemp };
+        int[] to = {R.id.tvRef, R.id.tvTime, R.id.tvTemp};
 
         // создаем адаптер
         SimpleAdapter sAdapter = new SimpleAdapter(this, data, R.layout.item,
@@ -325,11 +327,12 @@ public class settingsActivity extends Activity {
             switch(mode)
             {
                 case MODE_RECEIVE_CONFIG:
-                    receiveCinfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                        receiveConfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
                     break;
 
                 case MODE_SEND_CONFIG:
-                    sendConfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                    if(ret.length() > 10)
+                        sendConfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
                     break;
             }
 
@@ -348,13 +351,17 @@ public class settingsActivity extends Activity {
                 tsk.execute();
                 currentPeroid++;
             }
-
+        }
+        else
+        {
+            formBuffer(currentPeroid);
+            SendTask tsk = new SendTask();
+            tsk.execute();
         }
     }
     //==============================================================================================
-    void receiveCinfig(int dataIndex, String resp)
+    void receiveConfig(int dataIndex, String resp)
     {
-
         String s;
 
         if((resp.indexOf("\n\r") == 10) && (resp.indexOf("C") == 0) )
