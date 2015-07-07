@@ -36,7 +36,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
 
     Button updBtn, setBtn;
     ProgressBar pbWait;
-    private TextView response;
+    //private TextView response;
     String configReference = "lanConfig";
     public String plotValue = "";
     String timeString = "";
@@ -54,7 +54,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         final ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
 
 
-        final TextView response = (TextView) findViewById(R.id.response);
+        //final TextView response = (TextView) findViewById(R.id.response);
 
         TextView inTemp = (TextView) findViewById(R.id.inTemp);
         inTemp.setShadowLayer(5, 2, 2, Color.BLACK);
@@ -74,13 +74,11 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             public void onClick(View v) {
                 loadConfig();
                 pbWait.setVisibility(View.VISIBLE);
-                response.setText("Sending...");
+                //response.setText("Sending...");
                 SendTask tsk = new SendTask();
                 tsk.execute();
             }
         });
-        response.setText("response");
-
     }
     //==============================================================================================
     SharedPreferences sPref;
@@ -219,11 +217,11 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            i++;
-            String st = "Sended: " + i + "\r\n" + ret;
-
-            TextView response = (TextView) findViewById(R.id.response);
-            response.setText(st);
+//            i++;
+//            String st = "Sended: " + i + "\r\n" + ret;
+//
+//            TextView response = (TextView) findViewById(R.id.response);
+//            response.setText(st);
 
             int u = ret.indexOf("data:") + 5;
             String resp = ret.substring(u, ret.length());

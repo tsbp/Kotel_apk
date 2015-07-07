@@ -8,13 +8,16 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -36,7 +39,6 @@ public class settingsActivity extends Activity {
     String[] temp;
     ProgressBar pbConfig;
 
-    GridView gvMain;
     ListView lvMain;
     ArrayAdapter<String> adapter;
     List<String> aStrings = new ArrayList<String>();
@@ -56,8 +58,7 @@ public class settingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        final TextView response = (TextView) findViewById(R.id.confResponse);
-
+        //final TextView response = (TextView) findViewById(R.id.confResponse);
         Button bSave = (Button) findViewById(R.id.btnSave);
         Button bLoad = (Button) findViewById(R.id.btnLoad);
         Button bAdd  = (Button) findViewById(R.id.btnAdd);
@@ -71,9 +72,9 @@ public class settingsActivity extends Activity {
                     mode = MODE_SEND_CONFIG;
                     currentPeroid = 1;
                     formBuffer(currentPeroid);
-//                    ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
-//                    pb.setVisibility(View.VISIBLE);
-                    response.setText("Sending...");
+                    ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
+                    pb.setVisibility(View.VISIBLE);
+                   // response.setText("Sending...");
                     SendTask tsk = new SendTask();
                     tsk.execute();
                 }
@@ -89,7 +90,7 @@ public class settingsActivity extends Activity {
                 ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                 pb.setVisibility(View.VISIBLE);
                 loadConfig();
-                response.setText("Sending...");
+               //response.setText("Sending...");
                 SendTask tsk = new SendTask();
                 tsk.execute();
 
@@ -108,8 +109,8 @@ public class settingsActivity extends Activity {
                             tmpTime.add(time[k]);
                             tmpTemp.add(temp[k]);
                         }
-                    tmpTime.add("12:50");
-                    tmpTemp.add("33.3");
+                    tmpTime.add("??:??");
+                    tmpTemp.add("??.?");
 
                     time = new String[tmpTime.size()];
                     temp = new String[tmpTime.size()];
@@ -123,12 +124,10 @@ public class settingsActivity extends Activity {
         //================================================
         bDel.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                if(time != null)
-                {
+                if (time != null) {
                     List<String> tmpTime = new ArrayList<String>();
                     List<String> tmpTemp = new ArrayList<String>();
-                    for(int k = 0; k < (time.length - 1); k++)
-                    {
+                    for (int k = 0; k < (time.length - 1); k++) {
                         tmpTime.add(time[k]);
                         tmpTemp.add(temp[k]);
                     }
@@ -208,7 +207,6 @@ public class settingsActivity extends Activity {
                 Intent intent = new Intent(settingsActivity.this, PeroidConfig.class);
                 intent.putExtra("pTime", time[position]);
                 intent.putExtra("pTemp", temp[position]);
-                //startActivity(intent);
                 startActivityForResult(intent, 1);
             }
         });
@@ -314,15 +312,11 @@ public class settingsActivity extends Activity {
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
 
-            //if(ret.length() < 3) return;
-            i++;
-            String st = "Sended: " + i + "\r\n" + ret;
-
-            TextView response = (TextView) findViewById(R.id.confResponse);
-            response.setText(st);
-
-//            int dataIndex =
-//            String resp = ;
+//            i++;
+//            String st = "Sended: " + i + "\r\n" + ret;
+//
+//            TextView response = (TextView) findViewById(R.id.confResponse);
+//            response.setText(st);
 
             switch(mode)
             {
@@ -350,6 +344,11 @@ public class settingsActivity extends Activity {
                 SendTask tsk = new SendTask();
                 tsk.execute();
                 currentPeroid++;
+            }
+            else
+            {
+                ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
+                pb.setVisibility(View.INVISIBLE);
             }
         }
         else
