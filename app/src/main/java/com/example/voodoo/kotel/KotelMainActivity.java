@@ -217,11 +217,11 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-//            i++;
-//            String st = "Sended: " + i + "\r\n" + ret;
-//
-//            TextView response = (TextView) findViewById(R.id.response);
-//            response.setText(st);
+            i++;
+            String st = "Sended: " + i + "\r\n" + ret;
+
+            TextView response = (TextView) findViewById(R.id.response);
+            response.setText(st);
 
             int u = ret.indexOf("data:") + 5;
             String resp = ret.substring(u, ret.length());
@@ -247,16 +247,28 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                     {
                         if(plotRef == 'I')
                         {
+                            String ss ;
                             for(int j = 0; j < 24; j++)
-                                plot.aBuf[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
+                            {
+                                ss =  plotValue.substring(j * 4, j * 4 + 4);
+                                plot.aBuf[j] = Integer.parseInt(ss.substring(1));
+                                if(plotValue.contains("-"))
+                                    plot.aBuf[j] *= -1;
+                            }
 
                             com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
                             inCanvas.invalidate();
                         }
                         if(plotRef == 'O')
                         {
+                            String ss ;
                             for(int j = 0; j < 24; j++)
-                                plot2.aBuf2[j] = Integer.parseInt( plotValue.substring(j*3, j*3+3));
+                            {
+                                ss =  plotValue.substring(j * 4, j * 4 + 4);
+                                plot2.aBuf2[j] = Integer.parseInt(ss.substring(1));
+                                if(ss.contains("-"))
+                                    plot2.aBuf2[j] *= -1;
+                            }
 
                             com.example.voodoo.plot2 inCanvas = (com.example.voodoo.plot2) findViewById(R.id.outCanvas);
                             inCanvas.invalidate();
@@ -266,26 +278,33 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
                     {
                     }
 
-                    if(BROADCAST_ACTION.contains("I3"))
+                    if(BROADCAST_ACTION.contains("I4"))
                     {
                         TextView inTemp = (TextView) findViewById(R.id.inTemp);
-                        inTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
+                        String ss = plotValue.substring(plotValue.length() - 4, plotValue.length() - 1);
+                        ss = ss.replace("00", "0") + ".";
+                        if (ss.contains("-0"))ss.replace("+0", "+");
+                        if (ss.contains("+0"))ss.replace("-0", "-");
+                        inTemp.setText(ss + plotValue.substring(plotValue.length()-1));
                         BROADCAST_ACTION = "O1";
                         SendTask tsk = new SendTask();
                         tsk.execute();
                     }
-                    if(BROADCAST_ACTION.contains("O3"))
+                    if(BROADCAST_ACTION.contains("O4"))
                     {
                         TextView outTemp = (TextView) findViewById(R.id.outTemp);
-                        outTemp.setText(plotValue.substring(plotValue.length()-3, plotValue.length()-1) + '.' + plotValue.substring(plotValue.length()-1));
+                        String ss = plotValue.substring(plotValue.length()-4, plotValue.length()-1);
+                        ss = ss.replace("00", "0") + ".";
+                        if (ss.contains("+0") && ss.contains("+0.")== false) ss = ss.replace("+0", "+");
+                        if (ss.contains("-0") && ss.contains("-0.")== false) ss = ss.replace("-0", "-");
+                        outTemp.setText(ss + plotValue.substring(plotValue.length()-1));
                         BROADCAST_ACTION = "I1";
 
                         ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
                         pbWait.setVisibility(View.INVISIBLE);
+                        response.setText("Done");
                     }
-
                     plotValue = "";
-
                 }
                 else
                 {

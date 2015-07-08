@@ -312,11 +312,11 @@ public class settingsActivity extends Activity {
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
 
-//            i++;
-//            String st = "Sended: " + i + "\r\n" + ret;
-//
-//            TextView response = (TextView) findViewById(R.id.confResponse);
-//            response.setText(st);
+            i++;
+            String st = "Sended: " + i + "\r\n" + ret;
+
+            TextView response = (TextView) findViewById(R.id.confResponse);
+            response.setText(st);
 
             switch(mode)
             {
@@ -349,6 +349,8 @@ public class settingsActivity extends Activity {
             {
                 ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                 pb.setVisibility(View.INVISIBLE);
+                TextView t = (TextView)findViewById(R.id.confResponse);
+                t.setText("Done");
             }
         }
         else
@@ -392,6 +394,8 @@ public class settingsActivity extends Activity {
                 updateConfigTable();
                 ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                 pb.setVisibility(View.INVISIBLE);
+                TextView t = (TextView)findViewById(R.id.confResponse);
+                t.setText("Done");
                 aStrings.clear();
                 bStrings.clear();
             }
