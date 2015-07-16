@@ -1,7 +1,6 @@
 package com.example.voodoo.kotel;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -12,8 +11,7 @@ import android.widget.EditText;
 
 public class PeroidConfig extends Activity implements OnClickListener{
 
-    Button okBtn;
-    EditText etTime, etTemp;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

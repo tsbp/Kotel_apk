@@ -6,18 +6,11 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.view.View.OnClickListener;
-import android.widget.EditText;
-import android.widget.GridView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -33,16 +26,15 @@ import java.util.Map;
 
 public class settingsActivity extends Activity {
 
-    Button bSave, bLoad, bAdd, bDel;
+
     String configReference = "lanConfig";
     String[] time;
     String[] temp;
-    ProgressBar pbConfig;
+
 
     ListView lvMain;
-    ArrayAdapter<String> adapter;
-    List<String> aStrings = new ArrayList<String>();
-    List<String> bStrings = new ArrayList<String>();
+    List<String> aStrings = new ArrayList<>();
+    List<String> bStrings = new ArrayList<>();
 
     final int MODE_RECEIVE_CONFIG = 0;
     final int MODE_SEND_CONFIG    = 1;
@@ -58,7 +50,6 @@ public class settingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        //final TextView response = (TextView) findViewById(R.id.confResponse);
         Button bSave = (Button) findViewById(R.id.btnSave);
         Button bLoad = (Button) findViewById(R.id.btnLoad);
         Button bAdd  = (Button) findViewById(R.id.btnAdd);
@@ -71,10 +62,9 @@ public class settingsActivity extends Activity {
                 {
                     mode = MODE_SEND_CONFIG;
                     currentPeroid = 1;
-                    formBuffer(currentPeroid);
+                    formBuffer();
                     ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                     pb.setVisibility(View.VISIBLE);
-                   // response.setText("Sending...");
                     SendTask tsk = new SendTask();
                     tsk.execute();
                 }
@@ -90,7 +80,6 @@ public class settingsActivity extends Activity {
                 ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                 pb.setVisibility(View.VISIBLE);
                 loadConfig();
-               //response.setText("Sending...");
                 SendTask tsk = new SendTask();
                 tsk.execute();
 
@@ -101,8 +90,8 @@ public class settingsActivity extends Activity {
             public void onClick(View v) {
                 if(time.length < 9)
                 {
-                    List<String> tmpTime = new ArrayList<String>();
-                    List<String> tmpTemp = new ArrayList<String>();
+                    List<String> tmpTime = new ArrayList<>();
+                    List<String> tmpTemp = new ArrayList<>();
                     if(time != null)
                         for(int k = 0; k < time.length; k++)
                         {
@@ -113,7 +102,7 @@ public class settingsActivity extends Activity {
                     tmpTemp.add("??.?");
 
                     time = new String[tmpTime.size()];
-                    temp = new String[tmpTime.size()];
+                    temp = new String[tmpTemp.size()];
 
                     tmpTime.toArray(time);
                     tmpTemp.toArray(temp);
@@ -125,14 +114,14 @@ public class settingsActivity extends Activity {
         bDel.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 if (time != null) {
-                    List<String> tmpTime = new ArrayList<String>();
-                    List<String> tmpTemp = new ArrayList<String>();
+                    List<String> tmpTime = new ArrayList<>();
+                    List<String> tmpTemp = new ArrayList<>();
                     for (int k = 0; k < (time.length - 1); k++) {
                         tmpTime.add(time[k]);
                         tmpTemp.add(temp[k]);
                     }
                     time = new String[tmpTime.size()];
-                    temp = new String[tmpTime.size()];
+                    temp = new String[tmpTemp.size()];
 
                     tmpTime.toArray(time);
                     tmpTemp.toArray(temp);
@@ -155,7 +144,7 @@ public class settingsActivity extends Activity {
         updateConfigTable();
     }
     //==============================================================================================
-    void formBuffer(int aPeriod)
+    void formBuffer()
     {
         REQUEST_ACTION = "";
         REQUEST_ACTION = "CSAV" +
@@ -165,38 +154,28 @@ public class settingsActivity extends Activity {
                 temp[currentPeroid-1].substring(0,2) + temp[currentPeroid-1].substring(3,4);
     }
     //==============================================================================================
-    // имена атрибутов для Map
+    // ????? ????????? ??? Map
     final String ATTRIBUTE_NAME_REF = "ref";
     final String ATTRIBUTE_NAME_TIME = "time";
     final String ATTRIBUTE_NAME_TEMP = "temper";
     //==============================================================================================
     void updateConfigTable()
     {
-        int img = R.drawable.timeicon;
 
-        // упаковываем данные в понятную для адаптера структуру
-        ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(
+        ArrayList<Map<String, Object>> data = new ArrayList<>(
                 time.length);
         Map<String, Object> m;
         for (int i = 0; i < time.length; i++) {
-            m = new HashMap<String, Object>();
+            m = new HashMap<>();
             m.put(ATTRIBUTE_NAME_REF, i+1);
             m.put(ATTRIBUTE_NAME_TIME, time[i]);
             m.put(ATTRIBUTE_NAME_TEMP, temp[i]);
-            //m.put(ATTRIBUTE_NAME_IMAGE, img);
+
             data.add(m);
         }
-
-        // массив имен атрибутов, из которых будут читаться данные
         String[] from = {ATTRIBUTE_NAME_REF, ATTRIBUTE_NAME_TIME, ATTRIBUTE_NAME_TEMP};
-        // массив ID View-компонентов, в которые будут вставлять данные
         int[] to = {R.id.tvRef, R.id.tvTime, R.id.tvTemp};
-
-        // создаем адаптер
-        SimpleAdapter sAdapter = new SimpleAdapter(this, data, R.layout.item,
-                from, to);
-
-        // определяем список и присваиваем ему адаптер
+        SimpleAdapter sAdapter = new SimpleAdapter(this, data, R.layout.item, from, to);
         lvMain = (ListView) findViewById(R.id.lvMain);
         lvMain.setAdapter(sAdapter);
         //==========================================================
@@ -212,8 +191,6 @@ public class settingsActivity extends Activity {
         });
     }
     //==============================================================================================
-    SharedPreferences sPref;
-    public String config;
     int[] ip = new int[4];
     int port;
     //==============================================================================================
@@ -224,7 +201,7 @@ public class settingsActivity extends Activity {
 
         String _ip, _port;
 
-        if( cString.contains("port"))
+        if( cString != null && cString.contains("port"))
         {
             _ip   = cString.substring(0,cString.indexOf("port"));
             _port = cString.substring(cString.indexOf("port")+4,cString.length());
@@ -321,12 +298,12 @@ public class settingsActivity extends Activity {
             switch(mode)
             {
                 case MODE_RECEIVE_CONFIG:
-                        receiveConfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                    receiveConfig( ret.substring(ret.indexOf("data:") + 5, ret.length()));
                     break;
 
                 case MODE_SEND_CONFIG:
                     if(ret.length() > 10)
-                        sendConfig(ret.indexOf("data:") + 5, ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                        sendConfig(ret.substring(ret.indexOf("data:") + 5, ret.length()));
                     break;
             }
 
@@ -334,13 +311,13 @@ public class settingsActivity extends Activity {
         }
     }
     //==============================================================================================
-    void sendConfig(int dataIndex, String resp)
+    void sendConfig(String resp)
     {
         if(resp.contains("OK"))
         {
             if(currentPeroid <= time.length)
             {
-                formBuffer(currentPeroid);
+                formBuffer();
                 SendTask tsk = new SendTask();
                 tsk.execute();
                 currentPeroid++;
@@ -355,13 +332,13 @@ public class settingsActivity extends Activity {
         }
         else
         {
-            formBuffer(currentPeroid);
+            formBuffer();
             SendTask tsk = new SendTask();
             tsk.execute();
         }
     }
     //==============================================================================================
-    void receiveConfig(int dataIndex, String resp)
+    void receiveConfig(String resp)
     {
         String s;
 

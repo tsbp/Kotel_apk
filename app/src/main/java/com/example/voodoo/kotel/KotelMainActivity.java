@@ -7,36 +7,28 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.format.DateFormat;
-import android.text.format.Time;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.view.View.OnClickListener;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.voodoo.plot;
 import com.example.voodoo.plot2;
-
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.StringTokenizer;
+import java.util.Locale;
 
 
-public class KotelMainActivity extends Activity {//implements View.OnClickListener{
+public class KotelMainActivity extends Activity {
 
-    Button updBtn, setBtn;
-    ProgressBar pbWait;
-    //private TextView response;
     String configReference = "lanConfig";
     public String plotValue = "";
     String timeString = "";
@@ -45,17 +37,12 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //activity_kotel_main.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_kotel_main);
 
         Button updBtn = (Button) findViewById(R.id.updtbtn);
         Button setBtn = (Button) findViewById(R.id.setbtn);
 
         final ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
-
-
-        //final TextView response = (TextView) findViewById(R.id.response);
-
         TextView inTemp = (TextView) findViewById(R.id.inTemp);
         inTemp.setShadowLayer(5, 2, 2, Color.BLACK);
 
@@ -72,37 +59,41 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         });
         updBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                loadConfig();
+                if (!loadConfig())
+                {
+                    Toast toast = Toast.makeText(getApplicationContext(),
+                            "ip not valid", Toast.LENGTH_SHORT);
+                    toast.show();
+                    return;
+                }
                 pbWait.setVisibility(View.VISIBLE);
-                //response.setText("Sending...");
+                BROADCAST_ACTION = "I1";
                 SendTask tsk = new SendTask();
                 tsk.execute();
             }
         });
     }
     //==============================================================================================
-    SharedPreferences sPref;
-    public String config;
     int[] ip = new int[4];
     int port;
     //==============================================================================================
-    void loadConfig() {
+    boolean loadConfig() {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String  cString = sharedPreferences.getString(configReference, "") ;
 
-//        sPref = getPreferences(MODE_PRIVATE);
-//        String cString = sPref.getString(configReference, "");
+        if(cString == null) return false;
         String _ip, _port;
 
-        int i = cString.indexOf("port");
-        if(i != -1)
-        {
-            _ip   = cString.substring(0,i);
-            _port = cString.substring(i+4,cString.length());
-        }
-        else return;
 
+        if(cString.contains("port"))
+        {
+            _ip   = cString.substring(0,cString.indexOf("port"));
+            _port = cString.substring(cString.indexOf("port")+4,cString.length());
+        }
+        else return false;
+
+        int i;
         String tmp;
         for(int k = 0; k < 4; k++)
         {
@@ -113,7 +104,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             if(k < 3) _ip = _ip.substring(i+1, _ip.length());
         }
         port = Integer.parseInt(_port);
-
+        return  true;
     }
     //==============================================================================================
     @Override
@@ -152,7 +143,7 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
 
             if(BROADCAST_ACTION.contains("I1"))
             {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.UK);
                 Calendar cal = Calendar.getInstance();
                 timeString = dateFormat.format(cal.getTime());
                 BROADCAST_ACTION += timeString;
@@ -163,8 +154,6 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
         protected Void doInBackground(Void... params) {
 
             DatagramSocket ds = null;
-
-
             try
             {
 
@@ -228,95 +217,108 @@ public class KotelMainActivity extends Activity {//implements View.OnClickListen
             String s;
             if(((resp.contains("I")) || (resp.contains("O"))) && ( (resp.indexOf("\n")) != -1))
             {
-
                 if(resp.contains("I"))  plotRef = 'I';
                 if(resp.contains("O"))  plotRef = 'O';
-
-                s = ret.substring(u+1, u + 2);
-                int msgNumb = Integer.parseInt(s);
-                s = ret.substring(u + 2, u + 3);
-                int partsCount = Integer.parseInt(s);
-                s = ret.substring(u + 3, u + 4);
-                int valsCount = Integer.parseInt(s);
-
-                if(msgNumb == partsCount)
+                int msgNumb;
+                int partsCount;
+                try
                 {
-                    s = resp.substring(4, resp.indexOf("\n"));
-                    plotValue += s;
-                    try
+                    s = ret.substring(u+1, u + 2);
+                    msgNumb = Integer.parseInt(s);
+                    s = ret.substring(u + 2, u + 3);
+                    partsCount = Integer.parseInt(s);
+                    if(msgNumb == partsCount)
                     {
-                        if(plotRef == 'I')
+                        s = resp.substring(4, resp.indexOf("\n"));
+                        plotValue += s;
+                        try
                         {
-                            String ss ;
-                            for(int j = 0; j < 24; j++)
+                            if(plotRef == 'I')
                             {
-                                ss =  plotValue.substring(j * 4, j * 4 + 4);
-                                plot.aBuf[j] = Integer.parseInt(ss.substring(1));
-                                if(plotValue.contains("-"))
-                                    plot.aBuf[j] *= -1;
-                            }
+                                String ss ;
+                                for(int j = 0; j < 24; j++)
+                                {
+                                    ss =  plotValue.substring(j * 4, j * 4 + 4);
+                                    plot.aBuf[j] = Integer.parseInt(ss.substring(1));
+                                    if(plotValue.contains("-"))
+                                        plot.aBuf[j] *= -1;
+                                }
 
-                            com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
-                            inCanvas.invalidate();
+                                com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
+                                inCanvas.invalidate();
+                            }
+                            if(plotRef == 'O')
+                            {
+                                String ss ;
+                                for(int j = 0; j < 24; j++)
+                                {
+                                    ss =  plotValue.substring(j * 4, j * 4 + 4);
+                                    plot2.aBuf2[j] = Integer.parseInt(ss.substring(1));
+                                    if(ss.contains("-"))
+                                        plot2.aBuf2[j] *= -1;
+                                }
+
+                                com.example.voodoo.plot2 inCanvas = (com.example.voodoo.plot2) findViewById(R.id.outCanvas);
+                                inCanvas.invalidate();
+                            }
+                            if(BROADCAST_ACTION.contains("I4"))
+                            {
+                                TextView inTemp = (TextView) findViewById(R.id.inTemp);
+                                String ss = plotValue.substring(plotValue.length() - 4, plotValue.length() - 1);
+                                ss = ss.replace("00", "0") + ".";
+                                if (ss.contains("+0") && !ss.contains("+0.")) ss = ss.replace("+0", "+");
+                                if (ss.contains("-0") && !ss.contains("-0.")) ss = ss.replace("-0", "-");
+                                inTemp.setText(ss + plotValue.substring(plotValue.length()-1));
+                                BROADCAST_ACTION = "O1";
+                                SendTask tsk = new SendTask();
+                                tsk.execute();
+                            }
+                            if(BROADCAST_ACTION.contains("O4"))
+                            {
+                                TextView outTemp = (TextView) findViewById(R.id.outTemp);
+                                String ss = plotValue.substring(plotValue.length()-4, plotValue.length()-1);
+                                ss = ss.replace("00", "0") + ".";
+                                if (ss.contains("+0") && !ss.contains("+0.")) ss = ss.replace("+0", "+");
+                                if (ss.contains("-0") && !ss.contains("-0.")) ss = ss.replace("-0", "-");
+                                outTemp.setText(ss + plotValue.substring(plotValue.length()-1));
+
+                                ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+                                pbWait.setVisibility(View.INVISIBLE);
+                                response.setText("Done");
+                            }
                         }
-                        if(plotRef == 'O')
+                        catch (Exception e)
                         {
-                            String ss ;
-                            for(int j = 0; j < 24; j++)
-                            {
-                                ss =  plotValue.substring(j * 4, j * 4 + 4);
-                                plot2.aBuf2[j] = Integer.parseInt(ss.substring(1));
-                                if(ss.contains("-"))
-                                    plot2.aBuf2[j] *= -1;
-                            }
-
-                            com.example.voodoo.plot2 inCanvas = (com.example.voodoo.plot2) findViewById(R.id.outCanvas);
-                            inCanvas.invalidate();
+                            Toast t = Toast.makeText(getApplicationContext(),
+                                    "Error in data, please renew", Toast.LENGTH_SHORT);
+                            t.show();
+                            ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+                            pbWait.setVisibility(View.INVISIBLE);
                         }
+                        plotValue = "";
                     }
-                    catch (Exception e)
+                    else
                     {
-                    }
+                        s = resp.substring(4, resp.indexOf("\n"));
 
-                    if(BROADCAST_ACTION.contains("I4"))
-                    {
-                        TextView inTemp = (TextView) findViewById(R.id.inTemp);
-                        String ss = plotValue.substring(plotValue.length() - 4, plotValue.length() - 1);
-                        ss = ss.replace("00", "0") + ".";
-                        if (ss.contains("-0"))ss.replace("+0", "+");
-                        if (ss.contains("+0"))ss.replace("-0", "-");
-                        inTemp.setText(ss + plotValue.substring(plotValue.length()-1));
-                        BROADCAST_ACTION = "O1";
+                        if(resp.contains("I"))  BROADCAST_ACTION = 'I' + String.valueOf(msgNumb+1);
+                        if(resp.contains("O"))  BROADCAST_ACTION = 'O' + String.valueOf(msgNumb+1);
+
+                        plotValue += s;
                         SendTask tsk = new SendTask();
                         tsk.execute();
                     }
-                    if(BROADCAST_ACTION.contains("O4"))
-                    {
-                        TextView outTemp = (TextView) findViewById(R.id.outTemp);
-                        String ss = plotValue.substring(plotValue.length()-4, plotValue.length()-1);
-                        ss = ss.replace("00", "0") + ".";
-                        if (ss.contains("+0") && ss.contains("+0.")== false) ss = ss.replace("+0", "+");
-                        if (ss.contains("-0") && ss.contains("-0.")== false) ss = ss.replace("-0", "-");
-                        outTemp.setText(ss + plotValue.substring(plotValue.length()-1));
-                        BROADCAST_ACTION = "I1";
-
-                        ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
-                        pbWait.setVisibility(View.INVISIBLE);
-                        response.setText("Done");
-                    }
-                    plotValue = "";
                 }
-                else
+                catch (Exception e)
                 {
-                    s = resp.substring(4, resp.indexOf("\n"));
-
-                    if(resp.contains("I"))  BROADCAST_ACTION = 'I' + String.valueOf(msgNumb+1);
-                    if(resp.contains("O"))  BROADCAST_ACTION = 'O' + String.valueOf(msgNumb+1);
-
-                    plotValue += s;
-                    SendTask tsk = new SendTask();
-                    tsk.execute();
+                    Toast t = Toast.makeText(getApplicationContext(),
+                            "Error in data, please renew", Toast.LENGTH_SHORT);
+                    t.show();
+                    ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+                    pbWait.setVisibility(View.INVISIBLE);
+                    return;
                 }
+
             }
             else
             {
