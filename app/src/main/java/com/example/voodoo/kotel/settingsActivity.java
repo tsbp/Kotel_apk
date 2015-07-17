@@ -3,6 +3,7 @@ package com.example.voodoo.kotel;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -26,23 +27,25 @@ import java.util.Map;
 
 public class settingsActivity extends Activity {
 
-
     String configReference = "lanConfig";
     String[] time;
     String[] temp;
-
 
     ListView lvMain;
     List<String> aStrings = new ArrayList<>();
     List<String> bStrings = new ArrayList<>();
 
     final int MODE_RECEIVE_CONFIG = 0;
-    final int MODE_SEND_CONFIG    = 1;
+    final int MODE_RECEIVE_WEEK   = 1;
+    final int MODE_SEND_CONFIG    = 2;
     int mode = MODE_RECEIVE_CONFIG;
     int currentPeroid;
 
     int selectedRow;
+    TextView dayType, tvResp;
+    String sDayType;
 
+    ProgressBar pb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -50,10 +53,18 @@ public class settingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        dayType = (TextView) findViewById(R.id.dayType);
+
+        pb = (ProgressBar)findViewById(R.id.pbConfig);
+        tvResp = (TextView)findViewById(R.id.confResponse);
+        lvMain = (ListView) findViewById(R.id.lvMain);
+
         Button bSave = (Button) findViewById(R.id.btnSave);
         Button bLoad = (Button) findViewById(R.id.btnLoad);
+        Button bLoadHolly = (Button) findViewById(R.id.btnLoadHolly);
         Button bAdd  = (Button) findViewById(R.id.btnAdd);
         Button bDel  = (Button) findViewById(R.id.btnDel);
+        Button bWeek = (Button) findViewById(R.id.btnWeek);
         //================================================
         bSave.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -63,7 +74,6 @@ public class settingsActivity extends Activity {
                     mode = MODE_SEND_CONFIG;
                     currentPeroid = 1;
                     formBuffer();
-                    ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                     pb.setVisibility(View.VISIBLE);
                     SendTask tsk = new SendTask();
                     tsk.execute();
@@ -72,13 +82,39 @@ public class settingsActivity extends Activity {
             }
         });
         //================================================
+        bWeek.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+
+                mode = MODE_RECEIVE_WEEK;
+                REQUEST_ACTION = "WEEK";
+                pb.setVisibility(View.VISIBLE);
+                sDayType = "Неделя";
+                loadConfig();
+                SendTask tsk = new SendTask();
+                tsk.execute();
+            }
+        });
+        //================================================
         bLoad.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
 
                 mode = MODE_RECEIVE_CONFIG;
-                REQUEST_ACTION = "CONF1";
-                ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
+                REQUEST_ACTION = "CONFW1";
                 pb.setVisibility(View.VISIBLE);
+                sDayType = "Рабочий день";
+                loadConfig();
+                SendTask tsk = new SendTask();
+                tsk.execute();
+            }
+        });
+        //================================================
+        bLoadHolly.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+
+                mode = MODE_RECEIVE_CONFIG;
+                REQUEST_ACTION = "CONFH1";
+                pb.setVisibility(View.VISIBLE);
+                sDayType = "Выходной";
                 loadConfig();
                 SendTask tsk = new SendTask();
                 tsk.execute();
@@ -106,7 +142,7 @@ public class settingsActivity extends Activity {
 
                     tmpTime.toArray(time);
                     tmpTemp.toArray(temp);
-                    updateConfigTable();
+                    updateListviewTemperature();
                 }
             }
         });
@@ -125,7 +161,7 @@ public class settingsActivity extends Activity {
 
                     tmpTime.toArray(time);
                     tmpTemp.toArray(temp);
-                    updateConfigTable();
+                    updateListviewTemperature();
                 }
 
             }
@@ -141,25 +177,25 @@ public class settingsActivity extends Activity {
         String aTemp = data.getStringExtra("rTemp");
         time[selectedRow] = aTime;
         temp[selectedRow] = aTemp;
-        updateConfigTable();
+        updateListviewTemperature();
     }
     //==============================================================================================
     void formBuffer()
     {
         REQUEST_ACTION = "";
-        REQUEST_ACTION = "CSAV" +
-                currentPeroid +
-                time.length +
+        REQUEST_ACTION = "CSAV";
+        if (sDayType.contains("Выходной")) REQUEST_ACTION += "H" + currentPeroid;
+        else                               REQUEST_ACTION += "W" + currentPeroid;
+        REQUEST_ACTION +=      time.length +
                 time[currentPeroid-1].substring(0,2) + time[currentPeroid-1].substring(3,5)+
                 temp[currentPeroid-1].substring(0,2) + temp[currentPeroid-1].substring(3,4);
     }
     //==============================================================================================
-    // ????? ????????? ??? Map
     final String ATTRIBUTE_NAME_REF = "ref";
     final String ATTRIBUTE_NAME_TIME = "time";
     final String ATTRIBUTE_NAME_TEMP = "temper";
     //==============================================================================================
-    void updateConfigTable()
+    void updateListviewTemperature()
     {
 
         ArrayList<Map<String, Object>> data = new ArrayList<>(
@@ -189,6 +225,30 @@ public class settingsActivity extends Activity {
                 startActivityForResult(intent, 1);
             }
         });
+    }
+    //==============================================================================================
+    final String wDays[] = {"Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"};
+    final String ATTRIBUTE_NAME_WDAY = "wday";
+    final String ATTRIBUTE_NAME_CHECKED = "checked";
+    //==============================================================================================
+    void updateListviewWeek(String aStr)
+    {
+        char[] day = aStr.toCharArray();
+        ArrayList<Map<String, Object>> data = new ArrayList<>(
+                wDays.length);
+        Map<String, Object> m;
+        for (int i = 0; i < wDays.length; i++) {
+            m = new HashMap<>();
+            m.put(ATTRIBUTE_NAME_REF,  i + 1);
+            if (day[i] == 'H') m.put(ATTRIBUTE_NAME_CHECKED,  true);
+            else               m.put(ATTRIBUTE_NAME_CHECKED,  false);
+            m.put(ATTRIBUTE_NAME_WDAY, wDays[i]);
+            data.add(m);
+        }
+        String[] from = {ATTRIBUTE_NAME_REF, ATTRIBUTE_NAME_CHECKED, ATTRIBUTE_NAME_WDAY};
+        int[] to = {R.id.tvRefW, R.id.chbDay, R.id.chbDay};
+        SimpleAdapter sAdapter = new SimpleAdapter(this, data, R.layout.itemweek, from, to);
+        lvMain.setAdapter(sAdapter);
     }
     //==============================================================================================
     int[] ip = new int[4];
@@ -221,7 +281,7 @@ public class settingsActivity extends Activity {
 
     }
     //==============================================================================================
-    String REQUEST_ACTION = "CONF1";
+    String REQUEST_ACTION;
     String ret = "";
     int i = 0;
 
@@ -252,9 +312,7 @@ public class settingsActivity extends Activity {
                 byte[] receiveData = new byte[1024];
                 DatagramPacket receivePacket =
                         new DatagramPacket(receiveData, receiveData.length);
-
-                //response.setText("Waiting for answer...");
-                ds.setSoTimeout(10000);
+                 ds.setSoTimeout(10000);
 
                 try {
                     ds.receive(receivePacket);
@@ -291,9 +349,7 @@ public class settingsActivity extends Activity {
 
             i++;
             String st = "Sended: " + i + "\r\n" + ret;
-
-            TextView response = (TextView) findViewById(R.id.confResponse);
-            response.setText(st);
+            tvResp.setText(st);
 
             switch(mode)
             {
@@ -305,9 +361,26 @@ public class settingsActivity extends Activity {
                     if(ret.length() > 10)
                         sendConfig(ret.substring(ret.indexOf("data:") + 5, ret.length()));
                     break;
+
+                case MODE_RECEIVE_WEEK:
+                    receiveWeek(ret.substring(ret.indexOf("data:") + 5, ret.length()));
+                    break;
             }
 
             ret = "no answer";
+        }
+    }
+
+    //==============================================================================================
+    void receiveWeek(String resp)
+    {
+        if((resp.indexOf("\n\r") == 9) && (resp.indexOf("WC") == 0) )
+        {
+            updateListviewWeek(resp.substring(2,9));
+            dayType.setBackgroundColor(Color.BLUE);
+            dayType.setTextColor(Color.YELLOW);
+            dayType.setText(sDayType);
+            pb.setVisibility(View.INVISIBLE);
         }
     }
     //==============================================================================================
@@ -324,10 +397,9 @@ public class settingsActivity extends Activity {
             }
             else
             {
-                ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
                 pb.setVisibility(View.INVISIBLE);
-                TextView t = (TextView)findViewById(R.id.confResponse);
-                t.setText("Done");
+
+                tvResp.setText("Done");
             }
         }
         else
@@ -341,6 +413,8 @@ public class settingsActivity extends Activity {
     void receiveConfig(String resp)
     {
         String s;
+
+
 
         if((resp.indexOf("\n\r") == 10) && (resp.indexOf("C") == 0) )
         {
@@ -368,19 +442,25 @@ public class settingsActivity extends Activity {
                     temp[j] = a1 + "." + a2;
                 }
 
-                updateConfigTable();
-                ProgressBar pb = (ProgressBar)findViewById(R.id.pbConfig);
+                updateListviewTemperature();
                 pb.setVisibility(View.INVISIBLE);
-                TextView t = (TextView)findViewById(R.id.confResponse);
-                t.setText("Done");
+                //TextView t = (TextView)findViewById(R.id.confResponse);
+                tvResp.setText("Done");
                 aStrings.clear();
                 bStrings.clear();
+
+                dayType.setBackgroundColor(Color.BLUE);
+                dayType.setTextColor(Color.YELLOW);
+                dayType.setText(sDayType);
             }
             else
             {
                 aStrings.add(resp.substring(3));
                 bStrings.add(resp.substring(3));
-                REQUEST_ACTION = "CONF" + String.valueOf(msgNumb+1);
+                REQUEST_ACTION = "CONF";
+                if (sDayType.contains("Выходной")) REQUEST_ACTION += "H";
+                else                               REQUEST_ACTION += "W";
+                REQUEST_ACTION += String.valueOf(msgNumb+1);
                 SendTask tsk = new SendTask();
                 tsk.execute();
             }
