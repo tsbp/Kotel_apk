@@ -17,7 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.voodoo.plot;
-import com.example.voodoo.plot2;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -33,6 +32,10 @@ public class KotelMainActivity extends Activity {
     public String plotValue = "";
     String timeString = "";
     String BROADCAST_ACTION = "I1";
+    TextView response, inTemp, outTemp;
+    ProgressBar pbWait;
+    com.example.voodoo.plot inCanvas;
+    com.example.voodoo.plot outCanvas;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,14 +45,20 @@ public class KotelMainActivity extends Activity {
         Button updBtn = (Button) findViewById(R.id.updtbtn);
         Button setBtn = (Button) findViewById(R.id.setbtn);
 
-        final ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
-        TextView inTemp = (TextView) findViewById(R.id.inTemp);
+        inTemp = (TextView) findViewById(R.id.inTemp);
         inTemp.setShadowLayer(5, 2, 2, Color.BLACK);
 
-        TextView outTemp = (TextView) findViewById(R.id.outTemp);
+        outTemp = (TextView) findViewById(R.id.outTemp);
         outTemp.setTextColor(Color.WHITE);
         outTemp.setShadowLayer(5, 2, 2, Color.BLACK);
 
+        response = (TextView) findViewById(R.id.response);
+        pbWait = (ProgressBar) findViewById(R.id.progressBar);
+
+        inCanvas  = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
+        outCanvas = (com.example.voodoo.plot) findViewById(R.id.outCanvas);
+
+        update();
 
         setBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -59,19 +68,25 @@ public class KotelMainActivity extends Activity {
         });
         updBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                if (!loadConfig())
-                {
-                    Toast toast = Toast.makeText(getApplicationContext(),
-                            "ip not valid", Toast.LENGTH_SHORT);
-                    toast.show();
-                    return;
-                }
-                pbWait.setVisibility(View.VISIBLE);
-                BROADCAST_ACTION = "I1";
-                SendTask tsk = new SendTask();
-                tsk.execute();
+
+                update();
             }
         });
+    }
+    //==============================================================================================
+    void update()
+    {
+        if (!loadConfig())
+        {
+            Toast toast = Toast.makeText(getApplicationContext(),
+                    "ip not valid", Toast.LENGTH_SHORT);
+            toast.show();
+            return;
+        }
+        pbWait.setVisibility(View.VISIBLE);
+        BROADCAST_ACTION = "I1";
+        SendTask tsk = new SendTask();
+        tsk.execute();
     }
     //==============================================================================================
     int[] ip = new int[4];
@@ -169,7 +184,6 @@ public class KotelMainActivity extends Activity {
                 DatagramPacket receivePacket =
                         new DatagramPacket(receiveData, receiveData.length);
 
-                //response.setText("Waiting for answer...");
                 ds.setSoTimeout(10000);
 
                 try {
@@ -178,7 +192,7 @@ public class KotelMainActivity extends Activity {
                             new String(receivePacket.getData());
                     InetAddress returnIPAddress = receivePacket.getAddress();
                     int port = receivePacket.getPort();
-                    ret = "ip:" + returnIPAddress + "\r\nport:" + port + "\r\ndata:" + modifiedSentence;
+                    ret = returnIPAddress + ":" + port + "\r\ndata:" + modifiedSentence;
                 }
                 catch (SocketTimeoutException ste)
                 {
@@ -208,8 +222,6 @@ public class KotelMainActivity extends Activity {
             super.onPostExecute(result);
             i++;
             String st = "Sended: " + i + "\r\n" + ret;
-
-            TextView response = (TextView) findViewById(R.id.response);
             response.setText(st);
 
             int u = ret.indexOf("data:") + 5;
@@ -233,41 +245,24 @@ public class KotelMainActivity extends Activity {
                         plotValue += s;
                         try
                         {
-                            if(plotRef == 'I')
+                            String ss ;
+                            for(int j = 0; j < 24; j++)
                             {
-                                String ss ;
-                                for(int j = 0; j < 24; j++)
-                                {
-                                    ss =  plotValue.substring(j * 4, j * 4 + 4);
-                                    plot.aBuf[j] = Integer.parseInt(ss.substring(1));
-                                    if(plotValue.contains("-"))
-                                        plot.aBuf[j] *= -1;
-                                }
-
-                                com.example.voodoo.plot inCanvas = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
-                                inCanvas.invalidate();
+                                ss =  plotValue.substring(j * 4, j * 4 + 4);
+                                plot.aBuf[j] = Integer.parseInt(ss.substring(1));
+                                if(plotValue.contains("-"))
+                                    plot.aBuf[j] *= -1;
                             }
-                            if(plotRef == 'O')
-                            {
-                                String ss ;
-                                for(int j = 0; j < 24; j++)
-                                {
-                                    ss =  plotValue.substring(j * 4, j * 4 + 4);
-                                    plot2.aBuf2[j] = Integer.parseInt(ss.substring(1));
-                                    if(ss.contains("-"))
-                                        plot2.aBuf2[j] *= -1;
-                                }
+                            if(plotRef == 'I') {plot.aColor = new int[]{150, 102, 204, 255}; inCanvas.invalidate(); }
+                            if(plotRef == 'O') {plot.aColor = new int[]{120, 255, 255, 0};   outCanvas.invalidate();}
 
-                                com.example.voodoo.plot2 inCanvas = (com.example.voodoo.plot2) findViewById(R.id.outCanvas);
-                                inCanvas.invalidate();
-                            }
+                            ss = plotValue.substring(plotValue.length()-4, plotValue.length()-1);
+                            ss = ss.replace("00", "0") + ".";
+                            if (ss.contains("+0") && !ss.contains("+0.")) ss = ss.replace("+0", "+");
+                            if (ss.contains("-0") && !ss.contains("-0.")) ss = ss.replace("-0", "-");
+
                             if(BROADCAST_ACTION.contains("I4"))
                             {
-                                TextView inTemp = (TextView) findViewById(R.id.inTemp);
-                                String ss = plotValue.substring(plotValue.length() - 4, plotValue.length() - 1);
-                                ss = ss.replace("00", "0") + ".";
-                                if (ss.contains("+0") && !ss.contains("+0.")) ss = ss.replace("+0", "+");
-                                if (ss.contains("-0") && !ss.contains("-0.")) ss = ss.replace("-0", "-");
                                 inTemp.setText(ss + plotValue.substring(plotValue.length()-1));
                                 BROADCAST_ACTION = "O1";
                                 SendTask tsk = new SendTask();
@@ -275,14 +270,7 @@ public class KotelMainActivity extends Activity {
                             }
                             if(BROADCAST_ACTION.contains("O4"))
                             {
-                                TextView outTemp = (TextView) findViewById(R.id.outTemp);
-                                String ss = plotValue.substring(plotValue.length()-4, plotValue.length()-1);
-                                ss = ss.replace("00", "0") + ".";
-                                if (ss.contains("+0") && !ss.contains("+0.")) ss = ss.replace("+0", "+");
-                                if (ss.contains("-0") && !ss.contains("-0.")) ss = ss.replace("-0", "-");
-                                outTemp.setText(ss + plotValue.substring(plotValue.length()-1));
-
-                                ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
+                                outTemp.setText(ss + plotValue.substring(plotValue.length() - 1));
                                 pbWait.setVisibility(View.INVISIBLE);
                                 response.setText("Done");
                             }
@@ -290,9 +278,9 @@ public class KotelMainActivity extends Activity {
                         catch (Exception e)
                         {
                             Toast t = Toast.makeText(getApplicationContext(),
-                                    "Error in data, please renew", Toast.LENGTH_SHORT);
+                                    "Error in data,renewing...", Toast.LENGTH_SHORT);
+                            update();
                             t.show();
-                            ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
                             pbWait.setVisibility(View.INVISIBLE);
                         }
                         plotValue = "";
@@ -312,9 +300,9 @@ public class KotelMainActivity extends Activity {
                 catch (Exception e)
                 {
                     Toast t = Toast.makeText(getApplicationContext(),
-                            "Error in data, please renew", Toast.LENGTH_SHORT);
+                            "Error in data, renewing...", Toast.LENGTH_SHORT);
+                    update();
                     t.show();
-                    ProgressBar pbWait = (ProgressBar) findViewById(R.id.progressBar);
                     pbWait.setVisibility(View.INVISIBLE);
                     return;
                 }

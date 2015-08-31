@@ -2,7 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="42dp"
     android:background="#99cc7700"
     android:orientation="horizontal">
     <TextView
@@ -18,12 +18,23 @@
         android:background="#99cc7700"
         android:gravity="center"/>
 
-    <CheckBox
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:id="@+id/ivDay"/>
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
         android:layout_gravity="center_vertical"
         android:textSize="20dp"
         android:textColor="#0000ff"
         android:text="New CheckBox"
         android:id="@+id/chbDay" />
+
+
 </LinearLayout>

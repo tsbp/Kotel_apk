@@ -54,7 +54,7 @@
 
     <TextView
         android:layout_width="fill_parent"
-        android:layout_height="80dp"
+        android:layout_height="50dp"
         android:id="@+id/response"
         android:gravity="center"
         android:layout_above="@+id/setbtn"
@@ -72,16 +72,16 @@
     <com.example.voodoo.plot
         android:id="@+id/inCanvas"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="120dp"
         android:layout_gravity="center_horizontal"
         android:indeterminate="false"
         android:layout_below="@+id/inTemp"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
-    <com.example.voodoo.plot2
+    <com.example.voodoo.plot
         android:id="@+id/outCanvas"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="120dp"
         android:layout_gravity="center_horizontal"
         android:indeterminate="false"
         android:layout_below="@+id/inCanvas"

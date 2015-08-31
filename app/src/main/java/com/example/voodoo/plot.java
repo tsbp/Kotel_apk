@@ -7,13 +7,14 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
-/**
- * Created by voodoo on 18.06.2015.
- */
+
+
+
 public class plot extends View {
 
     Paint p;
     public static int[] aBuf;
+    public static int[] aColor;
 
     public plot(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -21,6 +22,7 @@ public class plot extends View {
         p = new Paint();
         aBuf = new int[]{102,334,223,123,256,278,267,345,456,234,345,234,
                 222,222,222,222,222,222,222,222,222,222,222,222};
+        aColor = new int []{150, 102, 204, 255};
 
     }
     //==============================================================================================
@@ -30,7 +32,7 @@ public class plot extends View {
     int LEFT_OFFSET = 30;
     int RIGHT_OFFSET  =  (3);
     int X_OFFSET     =    (LEFT_OFFSET + RIGHT_OFFSET);
-    int TOP_OFFSET   =    (10);
+    int TOP_OFFSET   =    (5);
     int BOTTOM_OFFSET  =  (5);
     int Y_OFFSET       =  (TOP_OFFSET  + BOTTOM_OFFSET);
 
@@ -42,10 +44,9 @@ public class plot extends View {
     static float cena = 0;
     static int tmax, tmin;
     //==============================================================================================
-    protected void onDraw(Canvas canvas){
+    protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawARGB(150, 102, 204, 255); //set canvas background
-
+        canvas.drawARGB(aColor[0], aColor[1], aColor[2], aColor[3]); //set canvas background
 
         AREA_WIDTH = canvas.getWidth();
         AREA_HEIGH = canvas.getHeight();
@@ -75,13 +76,12 @@ public class plot extends View {
         float delta = tmax - tmin;
 
         cena = PLOT_HEIGH / delta;
-        int tmp  = tmax;
 
-        p.setTextSize(10);
+        p.setTextSize(12);
         p.setColor(Color.BLUE);
 
-        canvas.drawText(String.valueOf(tmax), 10, aY + TOP_OFFSET, p);
-        canvas.drawText(String.valueOf(tmin), 10, aY + AREA_HEIGH-9, p);
+        canvas.drawText(String.valueOf(tmax/10), 10, aY + TOP_OFFSET+7, p);
+        canvas.drawText(String.valueOf(tmin/10), 10, aY + AREA_HEIGH-3, p);
 
         p.setStrokeWidth(2);
         p.setColor(Color.RED);
