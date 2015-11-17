@@ -58,7 +58,7 @@ public class KotelMainActivity extends Activity {
         inCanvas  = (com.example.voodoo.plot) findViewById(R.id.inCanvas);
         outCanvas = (com.example.voodoo.plot) findViewById(R.id.outCanvas);
 
-        update();
+        //update();
 
         setBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
